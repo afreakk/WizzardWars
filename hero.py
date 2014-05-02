@@ -14,16 +14,15 @@ def vecFromDirection(direction):
         return (0,1)
 
 class Hero(object):
-    def __init__(self):
+    def __init__(self, connection):
         self.gfx = HeroGraphics("female.png", "down")
         self.pos = Position(0,0)
         self.castedSpells = []
+        self.connection = connection
     def translate(self, x, y):
         self._setAnimation(x,y)
         self.pos.x += x
         self.pos.y += y
-        self.pixelPerFrame = 4
-        self.pixelMoveCount = 0
     def castSpell(self, rx, ry, color):
         direction = vecFromDirection( self.getDirection() )
         x,y = (self.pos.x+self.gfx.rect.width/2, self.pos.y+self.gfx.rect.height/2)
@@ -51,11 +50,8 @@ class Hero(object):
 
     def _animate(self, intPos):
         if ( self.gfx.rect.x, self.gfx.rect.y ) != intPos:
-            self.pixelMoveCount += 1
+            self.connection.sendPos(intPos)
             self.gfx.incrementFrame()
-
-
-
 
 class HeroGraphics(pygame.sprite.Sprite):
     def __init__(self, filename, currentAnim):

@@ -6,6 +6,12 @@ class Commands(object):
     chat = "|C|"
     nick = "|N|"
 
+    setPos = "|P|"
+    setFrame = "|F|"
+    setAnim = "|A|"
+    setSpells = "|S|"
+
+
 class HXeption(Exception):
     def __init__(self, value):
         self.value = value
@@ -70,4 +76,13 @@ class SocketHandlerClient(SocketHandler):
     def registerNick(self, nick):
         nick = unifyData(nick)
         self.sock.send(Commands.nick+nick)
+
+    def sendPos(self, pos):
+        data = str(pos[0])+"$"+str(pos[1])
+        data = unifyData(data)
+        self.sock.send(Commands.setPos+data)
+    def parsePos(self, data):
+        pos = data.split("$")
+        pos = (int(pos[0]), int(pos[1]))
+        return pos
 

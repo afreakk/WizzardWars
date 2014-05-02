@@ -1,16 +1,40 @@
 from network.protocol import HXeption, SocketHandlerClient, Commands, fillCommand
+from otherplayers import drawNetworkHero
 import socket
 
 class NetworkPlayer(object):
     def __init__(self, nick):
         self.nick = nick
+        self.pos = (0,0)
+        self.spells = []
+        self.frame = 0
+        self.currentAnim = 'down'
     def rename(self, nick):
         self.nick = nick
+
+    def setPos(self, pos):
+        print "got new pos: ", pos
+        self.pos = pos
+    def setFrame(self, frame):
+        self.frame = frame
+    def setAnim(self, anim):
+        self.currentAnim = anim
+    def setSpells(self, spells):
+        self.spells = []
+        for spell in spells:
+            self.spells.append(spells)
+
+    def draw(self, heroGFX, screen, spellRadius, spellColor):
+        drawNetworkHero(self.pos, heroGFX, self.frame, self.currentAnim, self.spells, screen, spellRadius, spellColor)
+
 
 class NetworkData(object):
     def __init__(self, log):
         self.players = []
         self.log  = log
+    def drawPlayers(self, heroGFX, screen, spellRadius=10, spellColor=(0,255,0)):
+        for player in self.players:
+            player.draw(heroGFX, screen, spellRadius, spellColor)
 
     def addPlayer(self, nick):
         newPlayer = NetworkPlayer(nick)
@@ -18,20 +42,42 @@ class NetworkData(object):
         self.log.join(nick)
 
     def removePlayer(self, nick):
-        for player in self.players:
-            if player.nick == nick:
-                self.players.remove(player)
-                self.log.part(player.nick)
-            else:
-                print nick, "did not match", player.nick
+        player = self.getPlayer(nick)
+        self.players.remove(player)
+        self.log.part(player.nick)
 
     def addMessage(self, nick, msg):
         self.log.chat(nick, msg)
+
     def renamePlayer(self, oldNick, newNick):
+        try:
+            player = self.getPlayer(oldNick)
+            player.rename(newNick)
+            self.log.rename(oldNick, newNick)
+        except AttributeError as e:
+            print e, "[rename]nick error:", oldNick, newNick
+
+    def setPos(self, nick, pos):
+        try:
+            player = self.getPlayer(nick)
+            player.setPos(pos)
+        except AttributeError as e:
+            print e, "[setPos]nick error:", nick
+    def setFrame(self, nick, frame):
+        player = self.getPlayer(nick)
+        player.setFrame(frame)
+    def setAnim(self, nick, anim):
+        player = self.getPlayer(nick)
+        player.setAnim(anim)
+    def setSpells(self, nick, spells):
+        player = self.getPlayer(nick)
+        player.setSpells(spells)
+
+    def getPlayer(self, nick):
         for player in self.players:
-            if player.nick == oldNick:
-                player.rename(newNick)
-                self.log.rename(oldNick, newNick)
+            if player.nick == nick:
+                return player
+        return None
 
 
 
@@ -61,13 +107,14 @@ def networkDataFactory(chatWindow):
     networkData = NetworkData(log)
     return networkData
 
+
 class Connection(object):
-    def __init__(self, addr, nick, chatWindow):
+    def __init__(self, addr, nick, networkData):
         clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         clientsocket.connect(addr)
         clientsocket.setblocking(0)
         self.socketHandler = SocketHandlerClient(clientsocket, nick)
-        self.networkData = networkDataFactory(chatWindow)
+        self.networkData = networkData
 
     def update(self, chatWindow):
         try:
@@ -93,3 +140,10 @@ class Connection(object):
         elif command == Commands.chat:
             self.networkData.addMessage(nick, data)
 
+        elif command == Commands.setPos:
+            self.networkData.setPos(nick, self.socketHandler.parsePos(data))
+        else:
+            print "unkown command: ", command
+
+    def sendPos(self, pos):
+        self.socketHandler.sendPos(pos)
