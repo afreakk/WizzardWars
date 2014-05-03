@@ -142,8 +142,16 @@ class Connection(object):
 
         elif command == Commands.setPos:
             self.networkData.setPos(nick, self.socketHandler.parsePos(data))
+        elif command == Commands.setFrame:
+            self.networkData.setFrame(nick, self.socketHandler.parseFrame(data))
+        elif command == Commands.setAnim:
+            self.networkData.setAnim(nick, self.socketHandler.parseAnim(data))
         else:
             print "unkown command: ", command
 
     def sendPos(self, pos):
         self.socketHandler.sendPos(pos)
+    def sendFrame(self, frame):
+        self.socketHandler.sendFrame(frame)
+    def sendAnim(self, anim):
+        self.socketHandler.sendAnim(anim)

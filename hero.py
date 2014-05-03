@@ -37,6 +37,7 @@ class Hero(object):
     def getDirection(self):
         return self.gfx.currentAnim
     def _setAnimation(self, x, y):
+        oldAnim = self.gfx.currentAnim
         if x != 0:
             if x < 0:
                 self.gfx.currentAnim = "left"
@@ -47,11 +48,14 @@ class Hero(object):
                 self.gfx.currentAnim = "up"
             else:
                 self.gfx.currentAnim = "down"
+        if oldAnim != self.gfx.currentAnim:
+            self.connection.sendAnim(self.gfx.currentAnim)
 
     def _animate(self, intPos):
         if ( self.gfx.rect.x, self.gfx.rect.y ) != intPos:
             self.connection.sendPos(intPos)
             self.gfx.incrementFrame()
+            self.connection.sendFrame(self.gfx.imageIndex)
 
 class HeroGraphics(pygame.sprite.Sprite):
     def __init__(self, filename, currentAnim):

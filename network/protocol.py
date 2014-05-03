@@ -1,3 +1,4 @@
+import collections
 def fillCommand(command):
     return "|"+command+"|"
 class Commands(object):
@@ -19,7 +20,8 @@ class HXeption(Exception):
         return repr(self.value)
 
 def unifyData(data):
-    assert "/" not in data
+    if isinstance(data, collections.Iterable):
+        assert "/" not in data
     return str(data)+"/"
 
 def unifyID(id):
@@ -77,6 +79,7 @@ class SocketHandlerClient(SocketHandler):
         nick = unifyData(nick)
         self.sock.send(Commands.nick+nick)
 
+#============================================= data parsing
     def sendPos(self, pos):
         data = str(pos[0])+"$"+str(pos[1])
         data = unifyData(data)
@@ -85,4 +88,17 @@ class SocketHandlerClient(SocketHandler):
         pos = data.split("$")
         pos = (int(pos[0]), int(pos[1]))
         return pos
+
+    def sendFrame(self, frame):
+        data = unifyData(frame)
+        self.sock.send(Commands.setFrame+data)
+    def parseFrame(self, data):
+        return int(data)
+
+    def sendAnim(self, anim):
+        data = unifyData(anim)
+        self.sock.send(Commands.setAnim+data)
+    def parseAnim(self, data):
+        return data
+
 
