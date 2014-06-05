@@ -1,9 +1,11 @@
 import pygame
 import os, sys
 from gameloop import LevelManager
+
 width, height = 1152 , 648
 screen = pygame.display.set_mode((width, height))
 os.environ['SDL_VIDEO_CENTERED'] = '1'
+
 def startCore():
     main = Core(screen, 'Node')
     main.run()
